@@ -29,24 +29,29 @@ export class Module {
     this.path = config.path;
     this.bundler = config.bundler;
 
+    // 创建 magicString 实例，方便操作字符串
     this.magicString = new MagicString(this.source, {
       filename: this.path
     });
 
+    // 解析源代码为 ast 节点，方法后续的打包以及 tree shaking
     const ast = parse(this.source, {
       ecmaVersion: 6,
       sourceType: 'module',
     });
 
+    // 遍历当前 ast 中 body 中的节点，将这些子节点包装成 statement
     // @ts-ignore;
     this.statements = ast.body.map((node: acorn.Node) => {
       const magicString = this.magicString.snip(node.start, node.end);
       return new Statement(node, magicString, this);
     });
 
+    // 提取导入和导出的 statement
     this.importDeclarations = this.statements.filter(isImportDeclaration);
     this.exportDeclarations = this.statements.filter(isExportDeclaration);
 
+    // 开始分析 statement
     this.analyse();
   }
 
@@ -136,21 +141,23 @@ export class Module {
     })
 
     // 分析 statement，构建作用域
-    analyse(this.magicString, this);
+    this.statements.forEach(statement => {
+      statement.analyse();
+    })
 
     // 收集所有语句定义的变量，建立变量和 statement 语句之间的对应关系
     this.statements.forEach(statement => {
       for (const define of statement.defines.keys()) {
         this.definitions.set(define, statement);
       }
-    })
+    });
   }
 
   // 构建完成作用域之后，根据入口 module 的 defines 和 dependsOn 递归查找所有的引用 statement
   expandAllStatements() {
     const allStatements: Statement[] = []
     this.statements.forEach(statement => {
-      if (statement.node.type === 'ImportDeclaration') return
+      if (statement.node.type === 'ImportDeclaration') return;
       if (statement.node.type === 'ExportDeclaration') return;
 
       const statements = this.expandStatement(statement);
@@ -161,6 +168,7 @@ export class Module {
 
   expandStatement(statement: Statement) {
     const result: Statement[] = [];
+    // 遍历 statement 的 dependsOn，里面保存着依赖外部的变量, 并且根据 dependsOn 来创建 module，将依赖的 statement 添加到 results 集合中
     const dependencies = statement.dependsOn.keys();
     for (const dep of dependencies) {
       const definition = this.define(dep);
