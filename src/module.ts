@@ -178,7 +178,7 @@ export class Module {
     return result;
   }
 
-  define(name: string): any {
+  define(name: string): Statement[] {
     // 当前 module 的 imports 中导入该变量时，递归创建引用的 module 来收集 statement
     if (this.imports[name]) {
       const path = this.imports[name].source;

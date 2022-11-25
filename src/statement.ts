@@ -47,25 +47,9 @@ export class Statement implements statementConfigInterface {
       enter: (node: any) => {
         let newScope;
         switch (node.type) {
-          case 'FunctionExpression':
           case 'FunctionDeclaration':
-          case 'ArrowFunctionExpression':
-            const names = node.params.map(getName);
-            // function test(a, b, c) {}
-            if (node.type === 'FunctionDeclaration') {
-              addToScope(node, false);
-            } else if (node.type === 'FunctionExpression' && node.id) {
-              // const test = function hello (a, b, c) {}
-              names.push(node.id.name);
-            }
-
-            newScope = new Scope({
-              parent: scope,
-              names,
-              isBlockScope: false
-            });
+            addToScope(node, false);
             break;
-
           case 'BlockStatement':
             newScope = new Scope({
               parent: scope,
