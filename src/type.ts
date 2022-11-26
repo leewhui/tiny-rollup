@@ -21,7 +21,6 @@ export interface moduleConfigInterface {
 export interface statementConfigInterface {
   node: acorn.Node; // 这个 statement 对应的 ast节点
   source: MagicString; // 对应的代码
-  module: Module;
 }
 
 // 作用域的参数

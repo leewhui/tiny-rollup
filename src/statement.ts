@@ -1,26 +1,22 @@
 import acorn from "acorn";
-import { Module } from "./module";
 import { statementConfigInterface } from "./type";
 import MagicString from 'magic-string';
 import { Scope } from "./ast/scope.js";
 import { walk } from './ast/walk.js';
-import { getName } from "./helper.js";
 
 export class Statement implements statementConfigInterface {
   node: acorn.Node;
   source: MagicString;
-  module: Module;
   isImportDeclaration: boolean;
   isExportDeclaration: boolean;
   scope: Scope;
   defines: Set<string> = new Set(); // 该 statement 中定义的变量声明等
   dependsOn: Set<string> = new Set(); // 该 statement 引用的外部变量
 
-  constructor(node: acorn.Node, source: MagicString, module: Module) {
+  constructor(node: acorn.Node, source: MagicString, scope: Scope) {
     this.node = node;
     this.source = source;
-    this.module = module;
-    this.scope = new Scope();
+    this.scope = scope;
 
     this.isImportDeclaration = node.type === 'ImportDeclaration';
     this.isExportDeclaration = /^Export/.test(node.type);

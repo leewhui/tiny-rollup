@@ -4,7 +4,7 @@ import { moduleConfigInterface } from "./type.js";
 import { Statement } from './statement.js';
 import MagicString from 'magic-string';
 import { isExportDeclaration, isImportDeclaration } from "./helper.js";
-import { analyse } from "./ast/analyse.js";
+import { Scope } from "./ast/scope.js";
 
 export class Module {
   source: string;
@@ -40,11 +40,12 @@ export class Module {
       sourceType: 'module',
     });
 
+    const globalScope = new Scope();
     // 遍历当前 ast 中 body 中的节点，将这些子节点包装成 statement
     // @ts-ignore;
     this.statements = ast.body.map((node: acorn.Node) => {
       const magicString = this.magicString.snip(node.start, node.end);
-      return new Statement(node, magicString, this);
+      return new Statement(node, magicString, globalScope);
     });
 
     // 提取导入和导出的 statement
